@@ -86,7 +86,7 @@ function handleCommandMessage(message) {
     return command.message(message, args)
 }
 
-client.on("message", message => {
+function handleMessage(message) {
     if (message.author.bot) return
     if (message.channel.type == "dm") return
 
@@ -105,10 +105,10 @@ client.on("message", message => {
         if (lowerContent.indexOf("your life") !== -1) {
             message.reply("It all started with the big bang...")
         } else if (lowerContent.indexOf("new mods?") !== -1) {
-
             const com = _.find(commands, c => c.identifier === "mods")
             com.message(message, [])
-
+        } else if (lowerContent.indexOf("love") !== -1) {
+            message.react("\u2764")
         } else if (tools.messageIsFromBotChannel(message)) {
             var args = lowerContent.substring(1).split(" ").splice(1)
 
@@ -120,8 +120,9 @@ client.on("message", message => {
             }
         }
     }
-})
+}
 
+client.on("message", handleMessage)
 client.on("error", logger.error)
 
 // TODO: if kicked from server: rejoin
