@@ -8,7 +8,7 @@ class RoleCommand extends Command {
     }
 
     helpLines() {
-        return ["Add a role", "`!role <role name>`"];
+        return [["Add a role", "`!role <role name>`"]];
     }
 
     channels() {

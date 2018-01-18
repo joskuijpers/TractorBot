@@ -27,12 +27,8 @@ class ModsCommand extends Command {
         this.logger = logger;
     }
 
-    hasPermission(permissions) {
-        return true;
-    }
-
     helpLines() {
-        return ["Random no-mods answer", "`!mods [nickname]`"];
+        return [["Random no-mods answer", "`!mods [nickname]`"]];
     }
 
     message(message, args) {

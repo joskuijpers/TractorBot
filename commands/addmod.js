@@ -38,7 +38,7 @@ class RoleCommand extends Command {
     }
 
     helpLines() {
-        return ["Ping", "`!ping`"];
+        return [["Ping", "`!ping`"]];
     }
 
     message(message, args) {

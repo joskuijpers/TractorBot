@@ -8,7 +8,7 @@ class NoRoleCommand extends Command {
     }
 
     helpLines() {
-        return ["Remove a role", "`!norole <role name>`"];
+        return [["Remove a role", "`!norole <role name>`"]];
     }
 
     channels() {

@@ -4,7 +4,6 @@ const _ = require("lodash")
 const tools = require("./tools")
 
 // Configure a logger
-
 logger.remove(logger.transports.Console);
 logger.add(logger.transports.Console, {
     colorize: true
@@ -12,6 +11,7 @@ logger.add(logger.transports.Console, {
 logger.level = "debug";
 
 // Load storage
+
 
 // Load command system
 const commandNames = [
@@ -46,14 +46,19 @@ function handleCommandMessage(message) {
             return
         }
 
-        const permissions = message.channel.permissionsFor(message.member)
-        const list = _(commands)
-                        .filter(c => c.hasPermission(permissions))
-                        .flatMap(commands, c => c.helpLines())
-                        .values()
+        let embed = new Discord.RichEmbed()
+            .setTitle("TractorBot Commands")
+            .setDescription("These are the commands I accept from you, " + message.member.user.username + ":")
+            .setTimestamp()
 
-        // TODO: make it a card
-        return message.reply("My commands are:\n" + list.join("\n"))
+        const permissions = message.channel.permissionsFor(message.member)
+
+        _(commands)
+            .filter(c => c.hasPermission(permissions))
+            .flatMap(c => c.helpLines())
+            .forEach(h => embed = embed.addField(h[0], h[1], true))
+
+        return message.channel.send({embed})
     }
 
     const command = _(commands)
@@ -78,6 +83,10 @@ function handleCommandMessage(message) {
 }
 
 client.on("message", message => {
+    if (message.channel.type == "dm") {
+        return
+    }
+
     // Parse commands
     if (message.content.substring(0, 1) == "!") {
         const result = handleCommandMessage(message)
