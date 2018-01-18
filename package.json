@@ -1,0 +1,16 @@
+{
+  "name": "discord_gs_bot",
+  "version": "1.0.0",
+  "description": "My discord bot",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jos Kuijpers",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^11.3.0",
+    "lodash": "^4.17.4",
+    "winston": "^2.4.0"
+  }
+}
