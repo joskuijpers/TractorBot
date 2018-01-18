@@ -1,36 +1,10 @@
-case "addmod": {
-    if (!messageIsFromAdmin(message)) break
+const { Command } = require('./command')
 
-    if (args.length < 2) {
-        message.reply("To add mod text: `!addmod [en|de] [text]`")
-        break
-    }
-
-    let lang = args[0]
-    if (lang !== "en" && lang !== "de") {
-        message.reply("Language not supported")
-        break
-    }
-
-    let text = args.splice(1).join(" ")
-
-    console.log("Add text", text)
-
-    // TODO: Make persistent
-    listOfModResponses[language].push(text)
-
-    break
-}
-
-
-
-const { Command } = require('./command');
-const tools = require('../tools')
-
-class RoleCommand extends Command {
-    constructor(logger) {
-        super("ping");
-        this.logger = logger;
+class AddModLineCommand extends Command {
+    constructor(logger, storage) {
+        super("addline")
+        this.logger = logger
+        this.storage = storage
     }
 
     hasPermission(permissions) {
@@ -38,11 +12,24 @@ class RoleCommand extends Command {
     }
 
     helpLines() {
-        return [["Ping", "`!ping`"]];
+        return [["Add mod line", "`!" + this.identifier + " <en|de> <text>`"]]
     }
 
     message(message, args) {
+        if (args.length < 2) {
+            return this.help(message)
+        }
+
+        const language = args[0]
+        const line = args.splice(1).join(" ")
+
+        return this.storage.db.run("INSERT INTO MOD_LINES (lang, line) VALUES (?, ?)", [language, line])
+            .then(result => message.reply("Added line '" + line + "' as number " + result.stmt.lastID))
+            .catch(error => {
+                this.logger.error(error)
+                return message.reply("Failed to add line: " + error.message)
+            })
     }
 }
 
-exports.command = RoleCommand;
+exports.command = AddModLineCommand

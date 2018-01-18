@@ -1,23 +1,23 @@
-const { Command } = require('./command');
+const { Command } = require('./command')
 const tools = require('../tools')
 
 class NoRoleCommand extends Command {
     constructor(logger) {
-        super("norole");
-        this.logger = logger;
+        super("norole")
+        this.logger = logger
     }
 
     helpLines() {
-        return [["Remove a role", "`!norole <role name>`"]];
+        return [["Remove a role", "`!norole <role name>`"]]
     }
 
     channels() {
-        return ["bot"];
+        return ["bot"]
     }
 
     message(message, args) {
         if (args.length == 0) {
-            return this.help(message);
+            return this.help(message)
         }
 
         let roleName = args[0].toLowerCase()
@@ -32,9 +32,9 @@ class NoRoleCommand extends Command {
                     } else {
                         this.logger.error(error)
                     }
-                });
+                })
         }
     }
 }
 
-exports.command = NoRoleCommand;
+exports.command = NoRoleCommand

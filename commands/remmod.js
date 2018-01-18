@@ -1,24 +1,10 @@
-case "remmod": {
-    if (!messageIsFromAdmin(message)) break
+const { Command } = require('./command')
 
-    if (args.length < 2) {
-        message.reply("To remove mod text: `!remmod [en|de] [text]`")
-        break
-    }
-
-    let lang = args[0]
-
-    break
-}
-
-
-const { Command } = require('./command');
-const tools = require('../tools')
-
-class RoleCommand extends Command {
-    constructor(logger) {
-        super("ping");
-        this.logger = logger;
+class RemModLineCommand extends Command {
+    constructor(logger, storage) {
+        super("remline", ["rmline"])
+        this.logger = logger
+        this.storage = storage
     }
 
     hasPermission(permissions) {
@@ -26,11 +12,26 @@ class RoleCommand extends Command {
     }
 
     helpLines() {
-        return [["Ping", "`!ping`"]];
+        return [["Remove mod line", "`!" + this.identifier + " <id>`"]]
     }
 
     message(message, args) {
+        if (args.length < 1) {
+            return this.help(message)
+        }
+
+        let id = parseInt(args[0], 10)
+        if (isNaN(id)) {
+            return this.help(message)
+        }
+
+        return this.storage.db.run("DELETE FROM MOD_LINES WHERE id = ?", [id])
+            .then(result => message.reply("Removed line with number " + id))
+            .catch(error => {
+                this.logger.error(error)
+                return message.reply("Failed to remove line: " + error.message)
+            })
     }
 }
 
-exports.command = RoleCommand;
+exports.command = RemModLineCommand

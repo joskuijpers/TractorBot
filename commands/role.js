@@ -1,23 +1,23 @@
-const { Command } = require('./command');
+const { Command } = require('./command')
 const tools = require('../tools')
 
 class RoleCommand extends Command {
     constructor(logger) {
-        super("role");
-        this.logger = logger;
+        super("role")
+        this.logger = logger
     }
 
     helpLines() {
-        return [["Add a role", "`!role <role name>`"]];
+        return [["Add a role", "`!role <role name>`"]]
     }
 
     channels() {
-        return ["bot"];
+        return ["bot"]
     }
 
     message(message, args) {
         if (args.length == 0) {
-            return this.help(message);
+            return this.help(message)
         }
 
         let roleName = args[0].toLowerCase()
@@ -32,9 +32,9 @@ class RoleCommand extends Command {
                     } else {
                         this.logger.error(error)
                     }
-                });
+                })
         }
     }
 }
 
-exports.command = RoleCommand;
+exports.command = RoleCommand

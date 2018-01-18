@@ -1,10 +1,10 @@
-const { Command } = require('./command');
+const { Command } = require('./command')
 const tools = require('../tools')
 
 class PingCommand extends Command {
     constructor(logger) {
-        super("ping");
-        this.logger = logger;
+        super("ping")
+        this.logger = logger
     }
 
     hasPermission(permissions) {
@@ -12,12 +12,12 @@ class PingCommand extends Command {
     }
 
     helpLines() {
-        return [["Ping", "`!ping`"]];
+        return [["Ping", "`!ping`"]]
     }
 
     message(message, args) {
-        message.reply("Pong!");
+        message.reply("Pong!")
     }
 }
 
-exports.command = PingCommand;
+exports.command = PingCommand
