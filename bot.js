@@ -104,8 +104,11 @@ client.on("message", message => {
     if (lowerContent.startsWith("tractorbot")) {
         if (lowerContent.indexOf("your life") !== -1) {
             message.reply("It all started with the big bang...")
-        // } else if (lowerContent.indexOf("best mod?") !== -1) {
-        //     message.reply("The best mod is Seasons, of course...")
+        } else if (lowerContent.indexOf("new mods?") !== -1) {
+
+            const com = _.find(commands, c => c.identifier === "mods")
+            com.message(message, [])
+
         } else if (tools.messageIsFromBotChannel(message)) {
             var args = lowerContent.substring(1).split(" ").splice(1)
 
