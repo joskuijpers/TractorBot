@@ -114,7 +114,11 @@ function handleMessage(message) {
 
             if ((args.length == 1 && args[0].toLowerCase() == "johndeere")
                 || (args.length == 2 && args[0].toLowerCase() == "john" && args[1].toLowerCase().startsWith("deer"))) {
-                message.reply("Everybody keeps asking, but even I don't know.")
+                const texts = [
+                    "Everybody keeps asking, but even I don't know.",
+                    "<Missing License. Abort>"
+                ]
+                message.reply(_.sample(texts))
             } else if (args.length == 1) {
                 let emoji = client.emojis.find("name", args[0])
                 if (emoji) {
