@@ -21,14 +21,13 @@ class LinesCommand extends Command {
         let query = "SELECT lang, line, id FROM MOD_LINES"
         let params = []
 
-        if (args.length > 0) {
+        if (args.length > 0 && (args[0] == "en" || args[0] == "de")) {
             query = "SELECT lang, line FROM MOD_LINES WHERE lang = ?"
             params = args[0]
         }
 
         return this.storage.db.all(query, params).then(rows => {
             if (!rows) return
-
 
             const text = _(rows)
                 .map(l => "[" + l.lang + "] " + l.line + " (" + l.id +  ")")
