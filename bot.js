@@ -112,7 +112,10 @@ function handleMessage(message) {
         } else if (tools.messageIsFromBotChannel(message)) {
             var args = lowerContent.substring(1).split(" ").splice(1)
 
-            if (args.length == 1) {
+            if ((args.length == 1 && args[0].toLowerCase() == "johndeere")
+                || (args.length == 2 && args[0].toLowerCase() == "john" && args[1].toLowerCase().startsWith("deer"))) {
+                message.reply("Everybody keeps asking, but even I don't know.")
+            } else if (args.length == 1) {
                 let emoji = client.emojis.find("name", args[0])
                 if (emoji) {
                     message.react(emoji)
