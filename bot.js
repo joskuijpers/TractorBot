@@ -22,7 +22,8 @@ const commandNames = [
     "norole",
     "lines",
     "addmod",
-    "remmod"
+    "remmod",
+    // "meme"
 ]
 
 const commands = _.flatMap(commandNames, n => {
