@@ -23,7 +23,7 @@ class RoleCommand extends Command {
         let roleName = args[0].toLowerCase()
         let role = message.guild.roles.find(v => v.name.toLowerCase() == roleName)
 
-        if (role) {
+        if (role && message.member) {
             return message.member.addRole(role)
                 .then(_ => message.reply("Done!"))
                 .catch(error => {
