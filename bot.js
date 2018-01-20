@@ -14,6 +14,9 @@ logger.level = process.env["NODE_ENV"] == "production" ? "info" : "debug"
 // Load storage
 const storage = new Storage()
 
+// Initialize Discord Bot
+const client = new Discord.Client()
+
 // Load command system
 const commandNames = [
     "mods",
@@ -26,13 +29,21 @@ const commandNames = [
     // "meme"
 ]
 
-const commands = _.flatMap(commandNames, n => {
+const commands = _.map(commandNames, n => {
     const { command } = require("./commands/" + n)
     return new command(logger, storage)
 })
 
-// Initialize Discord Bot
-const client = new Discord.Client()
+// Load language processing system
+const processorNames = [
+    "simple",
+    "emoji",
+]
+
+const languageProcessors = _.map(processorNames, n => {
+    const { processor } = require("./language/" + n)
+    return new processor(client, logger, storage)
+})
 
 client.on("ready", (evt) => {
     logger.info("Connected")
@@ -88,35 +99,31 @@ function handleCommandMessage(message) {
 }
 
 function handleLanguageMessage(message, content) {
+    const match = _(languageProcessors)
+                // filter on channel
+                .filter(processor => {
+                    if (message.channel.type === "dm") {
+                        return true
+                    }
 
+                    const channels = processor.channels(message)
+                    return channels.length === 0 || channels.indexOf(message.channel.name) !== - 1
+                })
+                // find matches
+                .map(processor => processor.match(content))
+                // remove failed matches
+                .filter(v => !!v)
+                // take the first (find best match?)
+                .first()
 
-    let lowerContent = message.content.toLowerCase()
-    if (lowerContent.indexOf("your life") !== -1) {
-        return message.reply("It all started with the big bang...")
-    } else if (lowerContent.indexOf("new mods?") !== -1) {
-        const com = _.find(commands, c => c.identifier === "mods")
-        return com.message(message, [])
-    } else if (lowerContent.indexOf("love") !== -1) {
-        return message.react("\u2764")
-    } else if (tools.messageIsFromBotChannel(message)) {
-        var args = lowerContent.substring(1).split(" ").splice(1)
-
-        if ((args.length == 1 && args[0].toLowerCase() == "johndeere")
-            || (args.length == 2 && args[0].toLowerCase() == "john" && args[1].toLowerCase().startsWith("deer"))) {
-            const texts = [
-                "Everybody keeps asking, but even I don't know.",
-                "<Missing License. Abort>"
-            ]
-            return message.reply(_.sample(texts))
-        } else if (args.length == 1) {
-            let emoji = client.emojis.find("name", args[0])
-            if (emoji) {
-                return message.react(emoji)
-            }
-        }
+    if (match) {
+        return match.processor.process(message, content, match)
     }
 
-    // return message.reply(content)
+    if (content.toLowerCase().indexOf("new mods?") !== -1) {
+        const com = _.find(commands, c => c.identifier === "mods")
+        return com.message(message, [])
+    }
 }
 
 function handleMessage(message) {
