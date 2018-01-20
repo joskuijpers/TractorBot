@@ -87,50 +87,73 @@ function handleCommandMessage(message) {
     return command.message(message, args)
 }
 
-function handleMessage(message) {
-    if (message.author.bot) return
-    if (message.channel.type == "dm") return
-
-    // Parse commands
-    if (message.content.substring(0, 1) == "!") {
-        const result = handleCommandMessage(message)
-
-        if (result && result.catch) {
-            result.catch(logger.error)
-        }
-    }
+function handleLanguageMessage(message, content) {
 
 
     let lowerContent = message.content.toLowerCase()
-    if (lowerContent.startsWith("tractorbot")) {
-        if (lowerContent.indexOf("your life") !== -1) {
-            message.reply("It all started with the big bang...")
-        } else if (lowerContent.indexOf("new mods?") !== -1) {
-            const com = _.find(commands, c => c.identifier === "mods")
-            com.message(message, [])
-        } else if (lowerContent.indexOf("love") !== -1) {
-            message.react("\u2764")
-        } else if (tools.messageIsFromBotChannel(message)) {
-            var args = lowerContent.substring(1).split(" ").splice(1)
+    if (lowerContent.indexOf("your life") !== -1) {
+        return message.reply("It all started with the big bang...")
+    } else if (lowerContent.indexOf("new mods?") !== -1) {
+        const com = _.find(commands, c => c.identifier === "mods")
+        return com.message(message, [])
+    } else if (lowerContent.indexOf("love") !== -1) {
+        return message.react("\u2764")
+    } else if (tools.messageIsFromBotChannel(message)) {
+        var args = lowerContent.substring(1).split(" ").splice(1)
 
-            if ((args.length == 1 && args[0].toLowerCase() == "johndeere")
-                || (args.length == 2 && args[0].toLowerCase() == "john" && args[1].toLowerCase().startsWith("deer"))) {
-                const texts = [
-                    "Everybody keeps asking, but even I don't know.",
-                    "<Missing License. Abort>"
-                ]
-                message.reply(_.sample(texts))
-            } else if (args.length == 1) {
-                let emoji = client.emojis.find("name", args[0])
-                if (emoji) {
-                    message.react(emoji)
-                }
+        if ((args.length == 1 && args[0].toLowerCase() == "johndeere")
+            || (args.length == 2 && args[0].toLowerCase() == "john" && args[1].toLowerCase().startsWith("deer"))) {
+            const texts = [
+                "Everybody keeps asking, but even I don't know.",
+                "<Missing License. Abort>"
+            ]
+            return message.reply(_.sample(texts))
+        } else if (args.length == 1) {
+            let emoji = client.emojis.find("name", args[0])
+            if (emoji) {
+                return message.react(emoji)
             }
         }
     }
+
+    // return message.reply(content)
 }
 
-client.on("message", handleMessage)
+function handleMessage(message) {
+    if (message.author.bot) return
+
+    // Parse commands
+    if (message.channel.type !== "dm"
+        && message.content.substring(0, 1) == "!") {
+        return handleCommandMessage(message)
+    }
+
+    // Parse language on DM
+    if (message.channel.type === "dm") {
+        return handleLanguageMessage(message, message.content)
+    }
+
+    // Parse language
+    let content = message.content
+    if (content.toLowerCase().startsWith("tractorbot") // listens to tractorbot
+        || (content[0] == "<" /*speed*/ && content.startsWith("<@" + client.user.id + ">"))) { // and a mention/ping
+        // Remove the mention or name
+        let firstSpace = content.indexOf(" ")
+        if (firstSpace == -1) {
+            return
+        }
+        content = content.substr(firstSpace).trim()
+
+        return handleLanguageMessage(message, content)
+    }
+}
+
+client.on("message", message => {
+    const result = handleMessage(message)
+    if (result && result.catch) {
+        result.catch(logger.error)
+    }
+})
 client.on("error", logger.error)
 
 // TODO: if kicked from server: rejoin
