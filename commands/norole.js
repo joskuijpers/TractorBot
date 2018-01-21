@@ -20,7 +20,7 @@ class NoRoleCommand extends Command {
             return this.help(message)
         }
 
-        let roleName = args[0].toLowerCase()
+        let roleName = args.join(" ").toLowerCase()
         let role = message.guild.roles.find(v => v.name.toLowerCase() == roleName)
 
         if (role) {
