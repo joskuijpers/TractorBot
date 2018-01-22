@@ -1,4 +1,5 @@
 const { Command } = require('./command')
+const _ = require('lodash')
 
 class ModsCommand extends Command {
     constructor(logger, storage) {
@@ -25,10 +26,19 @@ class ModsCommand extends Command {
 
             if (args.length > 0) {
                 const name = args.join(" ").toLowerCase()
-                const member = message.guild.members.find(u => u.user.username.toLowerCase() == name)
+                let user
 
-                if (member) {
-                    return message.channel.send(msg, {reply: member.user})
+                if (message.mentions.users.size > 0) {
+                    user = message.mentions.users.first()
+                } else {
+                    let member = message.guild.members.find(u => u.user.username.toLowerCase() == name)
+                    if (!!member) {
+                        user = member.user
+                    }
+                }
+
+                if (user) {
+                    return message.channel.send(msg, {reply: user})
                 }
             }
 
