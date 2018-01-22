@@ -24,7 +24,7 @@ class ModsCommand extends Command {
             const msg = row.line;
 
             if (args.length > 0) {
-                const name = args[0].toLowerCase()
+                const name = args.join(" ").toLowerCase()
                 const member = message.guild.members.find(u => u.user.username.toLowerCase() == name)
 
                 if (member) {
