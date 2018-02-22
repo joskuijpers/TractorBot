@@ -26,6 +26,7 @@ const commandNames = [
     "lines",
     "addmod",
     "remmod",
+    "fs19"
     // "meme"
 ]
 

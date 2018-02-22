@@ -16,6 +16,10 @@ const matchResponses = [
     [
         /how are you( doing)?\?/,
         "I am fine, thank you."
+    ],
+    [
+        /fs19/i,
+        "We won't be disclosing any more of the FS19 features for now so don't bother asking here."
     ]
 ]
 
