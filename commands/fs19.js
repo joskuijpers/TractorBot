@@ -8,7 +8,23 @@ class FS19Command extends Command {
     }
 
     message(message, args) {
-        message.reply("We won't be disclosing any more of the FS19 features for now so don't bother asking here.")
+        let user
+        let msg = "We won't be disclosing any more of the FS19 features for now so don't bother asking here."
+
+        if (message.mentions.users.size > 0) {
+            user = message.mentions.users.first()
+        } else {
+            let member = message.guild.members.find(u => u.user.username.toLowerCase() == name)
+            if (!!member) {
+                user = member.user
+            }
+        }
+
+        if (user) {
+            return message.channel.send(msg, {reply: user})
+        } else {
+            message.reply(msg)
+        }
     }
 }
 
