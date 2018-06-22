@@ -1,15 +1,20 @@
 const Discord = require("discord.js")
-const logger = require("winston")
+const winston = require("winston")
 const _ = require("lodash")
 const tools = require("./tools")
 const { Storage } = require("./storage")
 
 // Configure a logger
-logger.remove(logger.transports.Console)
-logger.add(logger.transports.Console, {
-    colorize: true
+const logger = winston.createLogger({
+    level: process.env["NODE_ENV"] == "production" ? "info" : "debug",
+    format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+    ),
+    transports: [
+        new winston.transports.Console({colorize: true}),
+    ]
 })
-logger.level = process.env["NODE_ENV"] == "production" ? "info" : "debug"
 
 // Load storage
 const storage = new Storage()
@@ -46,10 +51,83 @@ const languageProcessors = _.map(processorNames, n => {
     return new processor(client, logger, storage)
 })
 
-client.on("ready", (evt) => {
+const gameData = {
+    helloChannelId: "459293598203248641",
+
+    welcomeMessage: "Hello! Welcome to the Farming Simulator Discord!\n\nWe have this awesome team system here.",
+
+    regionMessage: "Please select one of the regions by clicking on a reaction. If you clicked wrong, just click another.",
+    regions: [
+        {
+            name: "eu",
+            icon: "🇪🇺",
+            role: "EU"
+        },
+        {
+            name: "us",
+            icon: "🇺🇸",
+            role: "US"
+        },
+        {
+            name: "other",
+            icon: "🌏",
+            role: "Other"
+        }
+    ],
+
+    languageMessage: "Choose a language that you understand to get access to channels:",
+    languages: [
+        {
+            name: "en",
+            icon: "🇬🇧",
+            role: "EN"
+        },
+        {
+            name: "de",
+            icon: "🇩🇪",
+            role: "DE"
+        },
+        {
+            name: "fr",
+            icon: "🇫🇷",
+            role: "FR"
+        },
+        {
+            name: "nl",
+            icon: "🇳🇱",
+            role: "NL"
+        },
+        {
+            name: "pl",
+            icon: "🇵🇱",
+            role: "PL"
+        },
+        {
+            name: "es",
+            icon: "🇪🇸",
+            role: "ES"
+        }
+    ],
+    languageCancel: {
+        icon: "❌"
+    },
+
+    moddingMessage: "Are you a modder or are you interested in modding? Join the modding community:",
+    moddingRole: "Modding",
+    moddingActivate: {
+        icon: "🔧"
+    },
+    moddingDeactivate: {
+        icon: "❌"
+    }
+}
+
+client.on("ready", async (evt) => {
     logger.info("Connected")
     logger.info("Logged in as: ")
     logger.info(client.user.username + " - (" + client.user.id + ")")
+
+    startGameSystem()
 })
 
 function handleCommandMessage(message) {
@@ -164,10 +242,151 @@ client.on("message", message => {
 })
 client.on("error", logger.error)
 
-// TODO: if kicked from server: rejoin
+
+client.on("messageReactionAdd", async (reaction, user) => {
+    if (user.bot) {
+        // Ignore ourselves: that is annoying and circular
+        return
+    }
+
+    const removal = reaction.remove(user)
+
+    await handleGameReaction(reaction, user)
+        .catch(logger.error)
+
+    return removal
+})
+
+async function startGameSystem() {
+    let gameChannel = client.channels.get(gameData.helloChannelId)
+    gameData.helloChannel = gameChannel
+
+    logger.info("Clearing all messages in #" + gameChannel.name)
+
+    // Remove all possible message in the welcome channel
+    await gameChannel
+        .fetchMessages({ limit: 10 })
+        .then(async messages => Promise.all(_.mapValues([...messages], message => message[1].delete())))
+        .catch(logger.error)
+
+    logger.info("Adding welcome message")
+
+    await gameChannel
+        .send(gameData.welcomeMessage)
+        .then(async message => gameData.welcomeMessageObject = message )
+        .catch(logger.error)
+
+    logger.info("Adding region message")
+
+    // Add the welcome text
+    await gameChannel
+        .send(gameData.regionMessage)
+        .then(async message => {
+            gameData.regionMessageObject = message
+
+            logger.info("Adding reactions to region message")
+
+            for (region of gameData.regions) {
+                await message.react(region.icon)
+            }
+        })
+        .catch(logger.error)
+
+    logger.info("Adding language message")
+
+    await gameChannel
+        .send(gameData.languageMessage)
+        .then(async message => {
+            gameData.languageMessageObject = message
+
+            logger.info("Adding reactions to language message")
+
+            for (language of gameData.languages) {
+                await message.react(language.icon)
+            }
+
+            await message.react(gameData.languageCancel.icon)
+        })
+        .catch(logger.error)
+
+    logger.info("Adding modding message")
+
+    await gameChannel
+        .send(gameData.moddingMessage)
+        .then(async message => {
+            gameData.moddingMessageObject = message
+
+            logger.info("Adding reactions to modding message")
+
+            await message.react(gameData.moddingActivate.icon)
+            await message.react(gameData.moddingDeactivate.icon)
+        })
+        .catch(logger.error)
+
+    logger.info("Done")
+}
+
+async function handleGameReaction(reaction, user) {
+    const message = reaction.message
+    const guild = message.guild
+    const member = guild.member(user)
+
+    async function addRole(roleName) {
+        const role = guild.roles.find("name", roleName)
+        if (role) {
+            return member.addRole(role)
+        } else {
+            return Promise.resolve()
+        }
+    }
+
+    async function removeRole(roleName) {
+        const role = guild.roles.find("name", roleName)
+        if (role) {
+            return member.removeRole(role)
+        } else {
+            return Promise.resolve()
+        }
+    }
+
+    if (reaction.message.equals(gameData.regionMessageObject)) {
+        const region = _.find(gameData.regions, region => region.icon == reaction.emoji.name)
+
+        if (region != null) {
+            const role = guild.roles.find("name", region.role)
+
+            if (role != null && !member.roles.has(role.id)) {
+                // Only allow 1 region so first delete all and then add the role
+                return Promise
+                    .all(_.map(gameData.regions, region => removeRole(region.role)))
+                    .then(e => member.addRole(role))
+            }
+        }
+
+    } else if (reaction.message.equals(gameData.languageMessageObject)) {
+        const language = _.find(gameData.languages, lang => lang.icon == reaction.emoji.name)
+
+        if (language != null) {
+            return addRole(language.role)
+        }
+
+        if (reaction.emoji.name == gameData.languageCancel.icon) {
+            return Promise.all(_.map(gameData.languages, language => removeRole(language.role)))
+        }
+
+    } else if (reaction.message.equals(gameData.moddingMessageObject)) {
+        if (reaction.emoji.name == gameData.moddingActivate.icon) {
+            return addRole(gameData.moddingRole)
+        } else if (reaction.emoji.name == gameData.moddingDeactivate.icon) {
+            return removeRole(gameData.moddingRole)
+        }
+    }
+
+    return Promise.resolve()
+}
+
 
 storage
     .open()
     .then(() => client.login(process.env["DISCORD_TOKEN"]))
     .catch(logger.error)
-
