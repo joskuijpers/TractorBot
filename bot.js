@@ -244,7 +244,7 @@ client.on("error", logger.error)
 
 
 client.on("messageReactionAdd", async (reaction, user) => {
-    if (user.bot) {
+    if (user.bot || !gameData.helloChannel.equals(reaction.message.channel)) {
         // Ignore ourselves: that is annoying and circular
         return
     }
