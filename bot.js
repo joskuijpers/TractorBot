@@ -4,6 +4,8 @@ const _ = require("lodash")
 const tools = require("./tools")
 const { Storage } = require("./storage")
 
+process.setMaxListeners(0)
+
 // Configure a logger
 const logger = winston.createLogger({
     level: process.env["NODE_ENV"] == "production" ? "info" : "debug",
@@ -258,12 +260,9 @@ client.on("messageReactionAdd", async (reaction, user) => {
         return
     }
 
-    const removal = reaction.remove(user)
-
-    await handleGameReaction(reaction, user)
+    return handleGameReaction(reaction, user)
+        .then(x => reaction.remove(user))
         .catch(logger.error)
-
-    return removal
 })
 
 async function startGameSystem() {
