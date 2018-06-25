@@ -353,6 +353,11 @@ async function handleGameReaction(reaction, user) {
     const guild = message.guild
     const member = guild.member(user)
 
+    if (member == null) {
+        logger.error("Has null member " + user.username)
+        return Promise.resolve()
+    }
+
     async function addRole(roleName) {
         const role = guild.roles.find("name", roleName)
         if (role) {
