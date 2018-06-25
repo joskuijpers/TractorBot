@@ -26,8 +26,8 @@ const client = new Discord.Client()
 const commandNames = [
     "mods",
     "ping",
-    "role",
-    "norole",
+    // "role",
+    // "norole",
     "lines",
     "addmod",
     "remmod",
@@ -54,28 +54,28 @@ const languageProcessors = _.map(processorNames, n => {
 const gameData = {
     helloChannelId: "459293598203248641",
 
-    welcomeMessage: "Hello! Welcome to the Farming Simulator Discord!\n\nWe have this awesome team system here.",
+    welcomeMessage: "Welcome to the official Farming Simulator Discord\nPlease keep all conversations social and friendly.\n\nPlease chose from the following options to customise your Discord experience and tailor it to your liking.\nYou can come back to the welcome channel at any time to adjust your settings.\n\n",
 
-    regionMessage: "Please select one of the regions by clicking on a reaction. If you clicked wrong, just click another.",
+    regionMessage: "Please select one of the regions by clicking on a reaction.\nBitte wählt eure Region aus. Klickt einfach auf das Symbol eurer Wahl.",
     regions: [
         {
             name: "eu",
             icon: "🇪🇺",
-            role: "EU"
+            role: "Team EU"
         },
         {
-            name: "us",
+            name: "na",
             icon: "🇺🇸",
-            role: "US"
+            role: "Team NA"
         },
         {
-            name: "other",
+            name: "world",
             icon: "🌏",
-            role: "Other"
+            role: "Team World"
         }
     ],
 
-    languageMessage: "Choose a language that you understand to get access to channels:",
+    languageMessage: "Choose a language that you understand to get access to channels:\nBitte wählt eure Sprache(n):",
     languages: [
         {
             name: "en",
@@ -112,7 +112,7 @@ const gameData = {
         icon: "❌"
     },
 
-    voiceMessage: "Do you want to see the voice channels?",
+    voiceMessage: "Do you want to see the voice channels?\nWollt ihr die Voice-Kanäle sehen?",
     voiceRole: "Voice",
     voiceActivate: {
         icon: "🔈"
