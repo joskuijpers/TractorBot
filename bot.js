@@ -112,6 +112,15 @@ const gameData = {
         icon: "❌"
     },
 
+    voiceMessage: "Do you want to see the voice channels?",
+    voiceRole: "Voice",
+    voiceActivate: {
+        icon: "🔈"
+    },
+    voiceDeactivate: {
+        icon: "🔇"
+    },
+
     moddingMessage: "Are you a modder or are you interested in modding? Join the modding community:",
     moddingRole: "Modding",
     moddingActivate: {
@@ -309,6 +318,20 @@ async function startGameSystem() {
         })
         .catch(logger.error)
 
+    logger.info("Adding voice message")
+
+    await gameChannel
+        .send(gameData.voiceMessage)
+        .then(async message => {
+            gameData.voiceMessageObject = message
+
+            logger.info("Adding reactions to voice message")
+
+            await message.react(gameData.voiceActivate.icon)
+            await message.react(gameData.voiceDeactivate.icon)
+        })
+        .catch(logger.error)
+
     logger.info("Adding modding message")
 
     await gameChannel
@@ -372,6 +395,13 @@ async function handleGameReaction(reaction, user) {
 
         if (reaction.emoji.name == gameData.languageCancel.icon) {
             return Promise.all(_.map(gameData.languages, language => removeRole(language.role)))
+        }
+
+    } else if (reaction.message.equals(gameData.voiceMessageObject)) {
+        if (reaction.emoji.name == gameData.voiceActivate.icon) {
+            return addRole(gameData.voiceRole)
+        } else if (reaction.emoji.name == gameData.voiceDeactivate.icon) {
+            return removeRole(gameData.voiceRole)
         }
 
     } else if (reaction.message.equals(gameData.moddingMessageObject)) {
