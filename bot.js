@@ -4,8 +4,6 @@ const _ = require("lodash")
 const tools = require("./tools")
 const { Storage } = require("./storage")
 
-process.setMaxListeners(0)
-
 // Configure a logger
 const logger = winston.createLogger({
     level: process.env["NODE_ENV"] == "production" ? "info" : "debug",
