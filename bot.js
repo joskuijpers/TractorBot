@@ -128,7 +128,8 @@ const gameData = {
     },
     moddingDeactivate: {
         icon: "❌"
-    }
+    },
+    privacyMessage: "You can find our privacy policy at https://giants-software.com/privacyPolicy.php"
 }
 
 client.on("ready", async (evt) => {
@@ -251,7 +252,6 @@ client.on("message", message => {
 })
 client.on("error", logger.error)
 
-
 client.on("messageReactionAdd", async (reaction, user) => {
     if (user.bot || !gameData.helloChannel.equals(reaction.message.channel)) {
         // Ignore ourselves: that is annoying and circular
@@ -268,6 +268,8 @@ async function startGameSystem() {
     gameData.helloChannel = gameChannel
 
     logger.info("Clearing all messages in #" + gameChannel.name)
+
+    gameData.reactionQueue = []
 
     // Remove all possible message in the welcome channel
     await gameChannel
@@ -343,6 +345,9 @@ async function startGameSystem() {
         })
         .catch(logger.error)
 
+    await gameChannel
+        .send(gameData.privacyMessage)
+
     logger.info("Done")
 }
 
@@ -350,6 +355,32 @@ async function handleGameReaction(reaction, user) {
     const message = reaction.message
     const guild = message.guild
     const member = guild.member(user)
+
+
+    // reactionQueue
+    /*
+
+    Find message
+    Find reaction ID
+    Find member ID: if not known, fetch first (with function: addActionToQueue())
+    Then add to queue
+    Clean up queue
+
+    - if clear languages: remove all commands to set language
+    - if remove lang X, remove all previous lang X commands
+    - if set region Y, remove all previous region Y commands
+    - if set/unset modding, voice, remove all previous modding, voice commands
+
+    If queue was empty, trigger queue handler (async, timeout)
+    Then remove the reaction (always)
+
+    When processing queue:
+    - Execute action. For change of membership of region, clear only current one, add new one (=2 calls, not 4)
+    - For language clear, only remove current
+
+    If queue is not empty, trigger handler again
+
+     */
 
     if (member == null) {
         logger.error("Has null member " + user.username)
