@@ -1,5 +1,6 @@
 const Discord = require("discord.js")
 const winston = require("winston")
+const moment = require('moment')
 const _ = require("lodash")
 const tools = require("./tools")
 const { Storage } = require("./storage")
@@ -31,8 +32,10 @@ const commandNames = [
     "lines",
     "addmod",
     "remmod",
-    "fs19"
-    // "meme"
+    "fs19",
+    // "meme",
+    "timeout",
+    "timeouts",
 ]
 
 const commands = _.map(commandNames, n => {
@@ -138,6 +141,7 @@ client.on("ready", async (evt) => {
     logger.info(client.user.username + " - (" + client.user.id + ")")
 
     startGameSystem()
+    startTimeoutHandler()
 })
 
 function handleCommandMessage(message) {
@@ -178,9 +182,11 @@ function handleCommandMessage(message) {
     }
 
     const permissions = message.channel.permissionsFor(message.member)
-    if (!command.hasPermission(permissions)) {
+    if (!command.hasPermission(permissions, message.member)) {
         if (message.channel.name == "bot") {
             return message.reply("You do not have permission to use this command.")
+        } else {
+            return Promise.resolve()
         }
     }
 
@@ -345,6 +351,8 @@ async function startGameSystem() {
         })
         .catch(logger.error)
 
+    logger.info("Adding privacy policy")
+
     await gameChannel
         .send(gameData.privacyMessage)
 
@@ -388,7 +396,7 @@ async function handleGameReaction(reaction, user) {
     }
 
     async function addRole(roleName) {
-        const role = guild.roles.find("name", roleName)
+        const role = guild.roles.find(r => r.name == roleName)
         if (role) {
             return member.addRole(role)
         } else {
@@ -397,7 +405,7 @@ async function handleGameReaction(reaction, user) {
     }
 
     async function removeRole(roleName) {
-        const role = guild.roles.find("name", roleName)
+        const role = guild.roles.find(r => r.name == roleName)
         if (role) {
             return member.removeRole(role)
         } else {
@@ -409,7 +417,7 @@ async function handleGameReaction(reaction, user) {
         const region = _.find(gameData.regions, region => region.icon == reaction.emoji.name)
 
         if (region != null) {
-            const role = guild.roles.find("name", region.role)
+            const role = guild.roles.find(r => r.name == region.role)
 
             if (role != null && !member.roles.has(role.id)) {
                 // Only allow 1 region so first delete all and then add the role
@@ -446,6 +454,30 @@ async function handleGameReaction(reaction, user) {
     }
 
     return Promise.resolve()
+}
+
+async function startTimeoutHandler() {
+    let guild = client.guilds.find(g => g.name == "Farming Simulator")
+
+    let query = "SELECT id, userId, nickname, startDate, endDate FROM TIMEOUTS WHERE endDate < ?"
+    storage.db.all(query, [moment().unix()])
+        .then(rows => {
+            if (rows) {
+                let timeoutRole = guild.roles.find(v => v.name.toLowerCase() == "timeout")
+
+                return Promise
+                    .all(_.map(rows, row =>
+                        client.fetchUser(row.userId)
+                            .then(user => guild.fetchMember(user))
+                            .then(member => member.removeRole(timeoutRole))
+                    ))
+                    .then(_ => setTimeout(startTimeoutHandler, 10000))
+                    .catch(logger.error)
+            }
+
+            setTimeout(startTimeoutHandler, 10000)
+        })
+        .catch(logger.error)
 }
 
 

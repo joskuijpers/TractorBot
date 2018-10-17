@@ -9,10 +9,12 @@
   "author": "Jos Kuijpers",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^11.3.2",
+    "discord.js": "^11.4.2",
     "emoji-unicode-map": "^1.1.9",
-    "lodash": "^4.17.10",
-    "sqlite": "^2.9.2",
-    "winston": "^3.0.0"
+    "lodash": "^4.17.11",
+    "moment": "^2.22.2",
+    "parse-duration": "^0.1.1",
+    "sqlite": "^2.9.3",
+    "winston": "^3.1.0"
   }
 }

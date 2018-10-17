@@ -20,7 +20,7 @@ class EmojiProcessor extends LanguageProcessor {
             return null
         }
 
-        let emoji = this.client.emojis.find("name", args[0])
+        let emoji = this.client.emojis.find(e => e.name == args[0])
         if (!emoji) {
             let lc = content.toLowerCase()
 
