@@ -457,8 +457,23 @@ async function handleGameReaction(reaction, user) {
 }
 
 async function startTimeoutHandler() {
-    let guild = client.guilds.find(g => g.name == "Farming Simulator")
+    let channel = client.channels.get("502134763512135700")
+    let guild = channel.guild //client.guilds.find(g => g.name == "Farming Simulator")
 
+    // Remove all possible message in the welcome channel
+    await channel
+        .fetchMessages({ limit: 10 })
+        .then(async messages => Promise.all(_.mapValues([...messages], message => message[1].delete())))
+        .catch(logger.error)
+
+    await channel
+        .send("You have been put in time-out. You are not able to send any messages or reactions until your time-out has passed.")
+        .catch(logger.error)
+
+    setTimeout(timeoutHandler, 30000)
+}
+
+async function timeoutHandler() {
     let query = "SELECT id, userId, nickname, startDate, endDate FROM TIMEOUTS WHERE endDate < ?"
     storage.db.all(query, [moment().unix()])
         .then(rows => {
@@ -471,11 +486,11 @@ async function startTimeoutHandler() {
                             .then(user => guild.fetchMember(user))
                             .then(member => member.removeRole(timeoutRole))
                     ))
-                    .then(_ => setTimeout(startTimeoutHandler, 10000))
+                    .then(_ => setTimeout(timeoutHandler, 30000))
                     .catch(logger.error)
             }
 
-            setTimeout(startTimeoutHandler, 10000)
+            setTimeout(timeoutHandler, 30000)
         })
         .catch(logger.error)
 }
