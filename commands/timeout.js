@@ -47,10 +47,20 @@ class TimeoutCommand extends Command {
         const end = moment().add(duration)
 
         if (timeoutRole) {
-            return this.storage.db.run("INSERT INTO TIMEOUTS (userId, nickname, startDate, endDate, reason, issuedBy, num) VALUES (?, ?, ?, ?, ?, ?, 1) ON CONFLICT(userId) DO UPDATE SET endDate=excluded.endDate, startDate=excluded.startDate, num=excluded.num+1, reason=excluded.reason", [member.id, member.user.username, start.unix(), end.unix(), reason, message.member.user.username])
+            const query = "INSERT INTO TIMEOUTS (userId, nickname, startDate, endDate, reason, issuedBy, num, active) VALUES (?, ?, ?, ?, ?, ?, 1, 1) ON CONFLICT(userId) DO UPDATE SET endDate=excluded.endDate, startDate=excluded.startDate, num=excluded.num+1, reason=excluded.reason, active=1, issuedBy=excluded.issuedBy"
+            const args = [member.id, member.user.username, start.unix(), end.unix(), reason, message.member.user.username]
+
+            let issuer = message.member.user.username
+            if (message.member.nickname) {
+                issuer = message.member.nickname
+            }
+
+            return this.storage.db.run(query, args)
                 .then(result =>
                     member.addRole(timeoutRole)
                         .then(_ => message.reply("Given time-out of " + duration.humanize()))
+                        .then(_ => member.createDM())
+                        .then(dmChannel => dmChannel.send("You have been given a time-out of " + duration.humanize() + " by " + issuer + ". For the duration of this time-out, you will not be able to talk in any channels on the Farming Simulator Discord."))
                         .catch(error => {
                             this.logger.error(error.message)
                         })

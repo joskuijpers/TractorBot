@@ -269,6 +269,11 @@ client.on("messageReactionAdd", async (reaction, user) => {
         .catch(logger.error)
 })
 
+// Create an event listener for new guild members
+client.on("guildMemberAdd", member => {
+    return onNewGuildMember(member)
+});
+
 async function startGameSystem() {
     let gameChannel = client.channels.get(gameData.helloChannelId)
     gameData.helloChannel = gameChannel
@@ -457,8 +462,11 @@ async function handleGameReaction(reaction, user) {
 }
 
 async function startTimeoutHandler() {
-    let channel = client.channels.get("502134763512135700")
-    let guild = channel.guild //client.guilds.find(g => g.name == "Farming Simulator")
+    const channel = client.channels.get("502134763512135700")
+    if (!channel) {
+        return
+    }
+    const guild = channel.guild
 
     // Remove all possible message in the welcome channel
     await channel
@@ -474,17 +482,24 @@ async function startTimeoutHandler() {
 }
 
 async function timeoutHandler() {
-    let query = "SELECT id, userId, nickname, startDate, endDate FROM TIMEOUTS WHERE endDate < ?"
+    const channel = client.channels.get("502134763512135700")
+    if (!channel) {
+        return
+    }
+    const guild = channel.guild
+
+    const query = "SELECT id, userId, nickname, startDate, endDate FROM TIMEOUTS WHERE endDate < ? AND active = 1"
     storage.db.all(query, [moment().unix()])
         .then(rows => {
             if (rows) {
-                let timeoutRole = guild.roles.find(v => v.name.toLowerCase() == "timeout")
+                const timeoutRole = guild.roles.find(v => v.name.toLowerCase() == "timeout")
 
                 return Promise
                     .all(_.map(rows, row =>
                         client.fetchUser(row.userId)
                             .then(user => guild.fetchMember(user))
                             .then(member => member.removeRole(timeoutRole))
+                            .then(_ => storage.db.run("UPDATE TIMEOUTS SET active=0 WHERE id = ?", [row.id]))
                     ))
                     .then(_ => setTimeout(timeoutHandler, 30000))
                     .catch(logger.error)
@@ -495,6 +510,25 @@ async function timeoutHandler() {
         .catch(logger.error)
 }
 
+async function onNewGuildMember(member) {
+    const channel = client.channels.get("502134763512135700")
+    if (!channel) {
+        return
+    }
+    const guild = channel.guild
+
+    const query = "SELECT 1 FROM TIMEOUTS WHERE startDate < ? AND endDate > ? AND active = 1 AND userId = ?"
+    const now = moment().unix()
+    return storage.db.get(query, [now, now, member.id])
+        .then(item => {
+            if (item) {
+                const timeoutRole = guild.roles.find(v => v.name.toLowerCase() == "timeout")
+
+                return member.addRole(timeoutRole)
+            }
+        })
+        .catch(logger.error)
+}
 
 storage
     .open()

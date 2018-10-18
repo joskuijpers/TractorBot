@@ -23,7 +23,7 @@ class TimeoutsCommand extends Command {
     }
 
     message(message, args) {
-        let query = "SELECT nickname, startDate, endDate, reason, issuedBy, num FROM TIMEOUTS WHERE endDate > ? AND startDate < ?"
+        let query = "SELECT nickname, startDate, endDate, reason, issuedBy, num FROM TIMEOUTS WHERE endDate > ? AND startDate < ? ORDER BY endDate DESC LIMIT 10"
         let params = [moment().unix(), moment().unix()]
 
         if (args.length > 0 && (args[0] == "all")) {
