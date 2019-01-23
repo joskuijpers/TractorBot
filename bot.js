@@ -32,7 +32,7 @@ const commandNames = [
     "lines",
     "addmod",
     "remmod",
-    "fs19",
+    // "fs19",
     // "meme",
     "timeout",
     "timeouts",
