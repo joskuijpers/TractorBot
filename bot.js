@@ -500,6 +500,7 @@ async function timeoutHandler() {
                             .then(user => guild.fetchMember(user))
                             .then(member => member.removeRole(timeoutRole))
                             .then(_ => storage.db.run("UPDATE TIMEOUTS SET active=0 WHERE id = ?", [row.id]))
+                            .catch(logger.error)
                     ))
                     .then(_ => setTimeout(timeoutHandler, 30000))
                     .catch(logger.error)
