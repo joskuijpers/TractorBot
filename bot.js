@@ -59,24 +59,42 @@ const gameData = {
 
     welcomeMessage: "Welcome to the official Farming Simulator Discord\nPlease keep all conversations social and friendly.\n\nPlease chose from the following options to customise your Discord experience and tailor it to your liking.\nYou can come back to the welcome channel at any time to adjust your settings.\n\n",
 
-    regionMessage: "Please select one of the regions by clicking on a reaction.\nBitte wählt eure Region aus. Klickt einfach auf das Symbol eurer Wahl.",
-    regions: [
+    platformMessage: "Please select the platforms you play Farming Simulator on.\nBitte wähle die Plattformen auf denen du den Landwirtschafts-Simulator spielst aus.",
+    platforms: [
         {
-            name: "eu",
-            icon: "🇪🇺",
-            role: "Team EU"
+            name: "pc",
+            icon: "🖥️",
+            role: "PC/Mac",
+            "id": "🖥️"
         },
         {
-            name: "na",
-            icon: "🇺🇸",
-            role: "Team NA"
+            name: "xbox",
+            icon: '679310690212773899',
+            role: "Xbox",
+            id: "xbox"
         },
         {
-            name: "world",
-            icon: "🌏",
-            role: "Team World"
+            name: "ps",
+            icon: '679310689763983381',
+            role: "Playstation",
+            id: "playstation"
+        },
+        {
+            name: "mobile",
+            icon: "📱",
+            role: "Mobile",
+            id: "📱"
+        },
+        {
+            name: "switch",
+            icon: '679310689961246740',
+            role: "Nintendo Switch",
+            id: "switch"
         }
     ],
+    platformCancel: {
+        icon: "❌"
+    },
 
     languageMessage: "Choose a language that you understand to get access to channels:\nBitte wählt eure Sprache(n):",
     languages: [
@@ -295,19 +313,21 @@ async function startGameSystem() {
         .then(async message => gameData.welcomeMessageObject = message )
         .catch(logger.error)
 
-    logger.info("Adding region message")
+    logger.info("Adding platform message")
 
     // Add the welcome text
     await gameChannel
-        .send(gameData.regionMessage)
+        .send(gameData.platformMessage)
         .then(async message => {
-            gameData.regionMessageObject = message
+            gameData.platformMessageObject = message
 
-            logger.info("Adding reactions to region message")
+            logger.info("Adding reactions to platform message")
 
-            for (region of gameData.regions) {
-                await message.react(region.icon)
+            for (platform of gameData.platforms) {
+                await message.react(platform.icon.toString())
             }
+
+            await message.react(gameData.platformCancel.icon)
         })
         .catch(logger.error)
 
@@ -381,7 +401,6 @@ async function handleGameReaction(reaction, user) {
 
     - if clear languages: remove all commands to set language
     - if remove lang X, remove all previous lang X commands
-    - if set region Y, remove all previous region Y commands
     - if set/unset modding, voice, remove all previous modding, voice commands
 
     If queue was empty, trigger queue handler (async, timeout)
@@ -418,18 +437,15 @@ async function handleGameReaction(reaction, user) {
         }
     }
 
-    if (reaction.message.equals(gameData.regionMessageObject)) {
-        const region = _.find(gameData.regions, region => region.icon == reaction.emoji.name)
+    if (reaction.message.equals(gameData.platformMessageObject)) {
+        const platform = _.find(gameData.platforms, platform => platform.id == reaction.emoji.name)
 
-        if (region != null) {
-            const role = guild.roles.find(r => r.name == region.role)
+        if (platform != null) {
+            return addRole(platform.role)
+        }
 
-            if (role != null && !member.roles.has(role.id)) {
-                // Only allow 1 region so first delete all and then add the role
-                return Promise
-                    .all(_.map(gameData.regions, region => removeRole(region.role)))
-                    .then(e => member.addRole(role))
-            }
+        if (reaction.emoji.name == gameData.platformCancel.icon) {
+            return Promise.all(_.map(gameData.platforms, platform => removeRole(platform.role)))
         }
 
     } else if (reaction.message.equals(gameData.languageMessageObject)) {
