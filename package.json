@@ -11,7 +11,7 @@
   "dependencies": {
     "discord.js": "^11.5.1",
     "emoji-unicode-map": "^1.1.10",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "moment": "^2.24.0",
     "parse-duration": "^0.1.2",
     "sqlite": "^2.9.3",
