@@ -21,7 +21,7 @@ const logger = winston.createLogger({
 const storage = new Storage()
 
 // Initialize Discord Bot
-const client = new Discord.Client()
+const client = new Discord.Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] })
 
 // Load command system
 const commandNames = [
@@ -282,19 +282,29 @@ client.on("message", async (message) => {
 client.on("error", logger.error)
 
 client.on("messageReactionAdd", async (reaction, user) => {
+    if (reaction.partial) {
+        try {
+            await reaction.fetch();
+        } catch (error) {
+            logger.error('Something went wrong when fetching the message: ', error)
+            // Return as `reaction.message.author` may be undefined/null
+            return
+        }
+    }
+
     if (user.bot || !gameData.helloChannel.equals(reaction.message.channel)) {
         // Ignore ourselves: that is annoying and circular
         return
     }
 
     return handleGameReaction(reaction, user)
-        .then(x => reaction.users.remove(user))
+        .finally(() => reaction.users.remove(user))
+        // .then(x => reaction.users.remove(user))
         .catch(logger.error)
 })
 
 // Create an event listener for new guild members
 client.on("guildMemberAdd", async (member) => {
-    console.log("NEW MEMBER")
     return onNewGuildMember(member)
 });
 
@@ -426,7 +436,7 @@ async function handleGameReaction(reaction, user) {
     }
 
     async function addRole(roleName) {
-        guild.roles.fetch().then(roles => {
+        return guild.roles.fetch().then(roles => {
             const role = roles.cache.find(r => r.name == roleName)
             if (role) {
                 return member.roles.add(role)
@@ -435,7 +445,7 @@ async function handleGameReaction(reaction, user) {
     }
 
     async function removeRole(roleName) {
-        guild.roles.fetch().then(roles => {
+        return guild.roles.fetch().then(roles => {
             const role = roles.cache.find(r => r.name == roleName)
             if (role) {
                 return member.roles.remove(role)
