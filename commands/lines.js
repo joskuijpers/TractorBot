@@ -17,7 +17,7 @@ class LinesCommand extends Command {
         return [["Show all mods lines", "`!lines [en|de]`"]]
     }
 
-    message(message, args) {
+    async message(message, args) {
         let query = "SELECT lang, line, id FROM MOD_LINES"
         let params = []
 

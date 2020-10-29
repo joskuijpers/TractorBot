@@ -15,7 +15,7 @@ class RoleCommand extends Command {
         return ["bot"]
     }
 
-    message(message, args) {
+    async message(message, args) {
         if (args.length == 0) {
             return this.help(message)
         }

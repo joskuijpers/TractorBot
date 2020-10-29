@@ -20,7 +20,7 @@ class Command {
         return message.reply(this.helpLines().join("."))
     }
 
-    message(message, args) {
+    async message(message, args) {
     }
 }
 

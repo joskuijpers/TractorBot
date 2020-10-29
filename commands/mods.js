@@ -12,7 +12,7 @@ class ModsCommand extends Command {
         return [["Random no-mods answer", "`!mods [nickname]`"]]
     }
 
-    message(message, args) {
+    async message(message, args) {
         let language = "en"
         if (message.channel.name.endsWith("de")) {
             language = "de"

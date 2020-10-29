@@ -22,7 +22,7 @@ class TimeoutsCommand extends Command {
         return ["🔥war-room", "bot"]
     }
 
-    message(message, args) {
+    async message(message, args) {
         let query = "SELECT nickname, startDate, endDate, reason, issuedBy, num FROM TIMEOUTS WHERE endDate > ? AND startDate < ? ORDER BY endDate DESC LIMIT 10"
         let params = [moment().unix(), moment().unix()]
 

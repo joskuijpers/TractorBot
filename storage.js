@@ -1,4 +1,5 @@
-const sqlite = require("sqlite")
+const sqlite3 = require('sqlite3')
+const { open } = require('sqlite')
 
 class Storage {
 
@@ -6,17 +7,19 @@ class Storage {
         this.path = path || "./TractorBot.sqlite"
     }
 
-    open() {
+    async open() {
         const options = process.env["NODE_ENV"] != "production" ? { force: "last" } : {}
-        return Promise.resolve()
-            .then(() => sqlite.open(this.path, { Promise }))
-            .then(db => {
-                this.db = db;
-                return db.migrate(options)
-            })
+
+        return open({
+            filename: this.path,
+            driver: sqlite3.Database
+        }).then((db) => {
+            this.db = db;
+            return db.migrate(options)
+        })
     }
 
-    get(query) {
+    async get(query) {
         return this.db.get(query)
     }
 }

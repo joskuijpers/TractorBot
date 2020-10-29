@@ -15,7 +15,7 @@ class RemModLineCommand extends Command {
         return [["Remove mod line", "`!" + this.identifier + " <id>`"]]
     }
 
-    message(message, args) {
+    async message(message, args) {
         if (args.length < 1) {
             return this.help(message)
         }

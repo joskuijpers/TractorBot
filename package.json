@@ -9,12 +9,13 @@
   "author": "Jos Kuijpers",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^11.5.1",
-    "emoji-unicode-map": "^1.1.10",
-    "lodash": "^4.17.15",
-    "moment": "^2.24.0",
-    "parse-duration": "^0.1.2",
-    "sqlite": "^2.9.3",
-    "winston": "^3.2.1"
+    "discord.js": "^12.4.1",
+    "emoji-unicode-map": "^1.1.11",
+    "lodash": "^4.17.20",
+    "moment": "^2.29.1",
+    "parse-duration": "^0.4.4",
+    "sqlite": "^4.0.15",
+    "sqlite3": "^5.0.0",
+    "winston": "^3.3.3"
   }
 }

@@ -15,7 +15,7 @@ class PingCommand extends Command {
         return [["Ping", "`!ping`"]]
     }
 
-    message(message, args) {
+    async message(message, args) {
         message.reply("Pong!")
     }
 }

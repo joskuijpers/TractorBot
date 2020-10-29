@@ -16,7 +16,7 @@ class MemeCommand extends Command {
         return ["bot"]
     }
 
-    message(message, args) {
+    async message(message, args) {
         const text = message.content.substr(6).toLowerCase()
         const parts = _.map(text.split(";"), _.trim)
         if (parts.length < 2) {

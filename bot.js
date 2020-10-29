@@ -32,7 +32,7 @@ const commandNames = [
     "lines",
     "addmod",
     "remmod",
-    // "fs19",
+    // "fsGame",
     // "meme",
     "timeout",
     "timeouts",
@@ -162,7 +162,7 @@ client.on("ready", async (evt) => {
     startTimeoutHandler()
 })
 
-function handleCommandMessage(message) {
+async function handleCommandMessage(message) {
     let args = message.content.substring(1).split(" ")
     const cmd = args[0].toLowerCase()
     args = args.splice(1)
@@ -199,7 +199,12 @@ function handleCommandMessage(message) {
         return
     }
 
-    const permissions = message.channel.permissionsFor(message.member)
+    const member = message.member
+    if (member == null) {
+        return
+    }
+
+    const permissions = message.channel.permissionsFor(member)
     if (!command.hasPermission(permissions, message.member)) {
         if (message.channel.name == "bot") {
             return message.reply("You do not have permission to use this command.")
@@ -239,7 +244,7 @@ function handleLanguageMessage(message, content) {
     }
 }
 
-function handleMessage(message) {
+async function handleMessage(message) {
     if (message.author.bot) return
 
     // Parse commands
@@ -268,7 +273,7 @@ function handleMessage(message) {
     }
 }
 
-client.on("message", message => {
+client.on("message", async (message) => {
     const result = handleMessage(message)
     if (result && result.catch) {
         result.catch(logger.error)
@@ -283,17 +288,18 @@ client.on("messageReactionAdd", async (reaction, user) => {
     }
 
     return handleGameReaction(reaction, user)
-        .then(x => reaction.remove(user))
+        .then(x => reaction.users.remove(user))
         .catch(logger.error)
 })
 
 // Create an event listener for new guild members
-client.on("guildMemberAdd", member => {
+client.on("guildMemberAdd", async (member) => {
+    console.log("NEW MEMBER")
     return onNewGuildMember(member)
 });
 
 async function startGameSystem() {
-    let gameChannel = client.channels.get(gameData.helloChannelId)
+    let gameChannel = await client.channels.fetch(gameData.helloChannelId)
     gameData.helloChannel = gameChannel
 
     logger.info("Clearing all messages in #" + gameChannel.name)
@@ -302,7 +308,7 @@ async function startGameSystem() {
 
     // Remove all possible message in the welcome channel
     await gameChannel
-        .fetchMessages({ limit: 10 })
+        .messages.fetch({ limit: 10 })
         .then(async messages => Promise.all(_.mapValues([...messages], message => message[1].delete())))
         .catch(logger.error)
 
@@ -420,21 +426,21 @@ async function handleGameReaction(reaction, user) {
     }
 
     async function addRole(roleName) {
-        const role = guild.roles.find(r => r.name == roleName)
-        if (role) {
-            return member.addRole(role)
-        } else {
-            return Promise.resolve()
-        }
+        guild.roles.fetch().then(roles => {
+            const role = roles.cache.find(r => r.name == roleName)
+            if (role) {
+                return member.roles.add(role)
+            }
+        })
     }
 
     async function removeRole(roleName) {
-        const role = guild.roles.find(r => r.name == roleName)
-        if (role) {
-            return member.removeRole(role)
-        } else {
-            return Promise.resolve()
-        }
+        guild.roles.fetch().then(roles => {
+            const role = roles.cache.find(r => r.name == roleName)
+            if (role) {
+                return member.roles.remove(role)
+            }
+        })
     }
 
     if (reaction.message.equals(gameData.platformMessageObject)) {
@@ -478,7 +484,7 @@ async function handleGameReaction(reaction, user) {
 }
 
 async function startTimeoutHandler() {
-    const channel = client.channels.get("502134763512135700")
+    const channel = await client.channels.fetch("502134763512135700")
     if (!channel) {
         return
     }
@@ -486,7 +492,7 @@ async function startTimeoutHandler() {
 
     // Remove all possible message in the welcome channel
     await channel
-        .fetchMessages({ limit: 10 })
+        .messages.fetch({ limit: 10 })
         .then(async messages => Promise.all(_.mapValues([...messages], message => message[1].delete())))
         .catch(logger.error)
 
@@ -498,7 +504,7 @@ async function startTimeoutHandler() {
 }
 
 async function timeoutHandler() {
-    const channel = client.channels.get("502134763512135700")
+    const channel = await client.channels.fetch("502134763512135700")
     if (!channel) {
         return
     }
@@ -508,21 +514,23 @@ async function timeoutHandler() {
     storage.db.all(query, [moment().unix()])
         .then(rows => {
             if (rows) {
-                const timeoutRole = guild.roles.find(v => v.name.toLowerCase() == "timeout")
+                guild.roles.fetch().then(roles => {
+                    const timeoutRole = roles.cache.find(v => v.name.toLowerCase() == "timeout")
 
-                return Promise
-                    .all(_.map(rows, row =>
-                        client.fetchUser(row.userId)
-                            .then(user => guild.fetchMember(user))
-                            .then(member => member.removeRole(timeoutRole))
-                            .then(_ => storage.db.run("UPDATE TIMEOUTS SET active=0 WHERE id = ?", [row.id]))
-                            .catch(e => {
-                                logger.error(e)
-                                return storage.db.run("UPDATE TIMEOUTS SET active=0 WHERE id = ?", [row.id])
-                            })
-                    ))
-                    .then(_ => setTimeout(timeoutHandler, 30000))
-                    .catch(logger.error)
+                    return Promise
+                        .all(_.map(rows, row =>
+                            client.users.fetch(row.userId)
+                                .then(user => guild.members.fetch(user))
+                                .then(member => member.roles.remove(timeoutRole))
+                                .then(_ => storage.db.run("UPDATE TIMEOUTS SET active=0 WHERE id = ?", [row.id]))
+                                .catch(e => {
+                                    logger.error(e)
+                                    return storage.db.run("UPDATE TIMEOUTS SET active=0 WHERE id = ?", [row.id])
+                                })
+                        ))
+                        .then(_ => setTimeout(timeoutHandler, 30000))
+                        .catch(logger.error)
+                })
             }
 
             setTimeout(timeoutHandler, 30000)
@@ -531,7 +539,7 @@ async function timeoutHandler() {
 }
 
 async function onNewGuildMember(member) {
-    const channel = client.channels.get("502134763512135700")
+    const channel = await client.channels.fetch("502134763512135700")
     if (!channel) {
         return
     }
@@ -542,9 +550,10 @@ async function onNewGuildMember(member) {
     return storage.db.get(query, [now, now, member.id])
         .then(item => {
             if (item) {
-                const timeoutRole = guild.roles.find(v => v.name.toLowerCase() == "timeout")
-
-                return member.addRole(timeoutRole)
+                guild.roles.fetch().then(roles => {
+                    const timeoutRole = roles.cache.find(v => v.name.toLowerCase() == "timeout")
+                    return member.roles.add(timeoutRole)
+                })
             }
         })
         .catch(logger.error)

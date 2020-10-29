@@ -15,7 +15,7 @@ class AddModLineCommand extends Command {
         return [["Add mod line", "`!" + this.identifier + " <en|de> <text>`"]]
     }
 
-    message(message, args) {
+    async message(message, args) {
         if (args.length < 2) {
             return this.help(message)
         }

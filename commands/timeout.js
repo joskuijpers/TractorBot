@@ -18,7 +18,7 @@ class TimeoutCommand extends Command {
         return permissions.has("MANAGE_MESSAGES")
     }
 
-    message(message, args) {
+    async message(message, args) {
         if (args.length == 0) {
             return this.help(message)
         }
@@ -28,7 +28,7 @@ class TimeoutCommand extends Command {
 
         // Target user
         const member = message.mentions.members.first()
-        const timeoutRole = message.guild.roles.find(v => v.name.toLowerCase() == "timeout")
+        const timeoutRole = await message.guild.roles.fetch().then(roles => roles.cache.find(v => v.name.toLowerCase() == "timeout"))
 
         let duration = moment.duration(10, "m")
         if (args.length >= 2) {
@@ -57,7 +57,7 @@ class TimeoutCommand extends Command {
 
             return this.storage.db.run(query, args)
                 .then(result =>
-                    member.addRole(timeoutRole)
+                    member.roles.add(timeoutRole)
                         .then(_ => message.reply("Given time-out of " + duration.humanize()))
                         .then(_ => member.createDM())
                         .then(dmChannel => dmChannel.send("You have been given a time-out of " + duration.humanize() + " by " + issuer + ". For the duration of this time-out, you will not be able to talk in any channels on the Farming Simulator Discord."))

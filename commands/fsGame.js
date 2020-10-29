@@ -1,15 +1,15 @@
 const { Command } = require('./command')
 const tools = require('../tools')
 
-class FS19Command extends Command {
+class FSGameCommand extends Command {
     constructor(logger) {
-        super("fs19")
+        super("fs22")
         this.logger = logger
     }
 
-    message(message, args) {
+    async message(message, args) {
         let user
-        let msg = "We won't be disclosing any more of the FS19 features for now so don't bother asking here."
+        let msg = "We won't be disclosing any more of the FS22 features for now so don't bother asking here."
 
         if (message.mentions.users.size > 0) {
             user = message.mentions.users.first()
